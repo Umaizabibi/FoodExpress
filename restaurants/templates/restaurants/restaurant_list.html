@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Restaurants - FoodExpress{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Restaurants</h1>
+
+        <!-- Filter Options -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <form method="get" action="{% url 'restaurants:restaurant_list' %}" class="flex flex-wrap items-end gap-4">
+                <div class="w-full md:w-auto">
+                    <label for="cuisine" class="block text-sm font-medium text-gray-700 mb-1">Cuisine Type</label>
+                    <select name="cuisine" id="cuisine" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                        <option value="">All Cuisines</option>
+                        {% for code, name in cuisine_types %}
+                            <option value="{{ code }}" {% if selected_cuisine == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="w-full md:w-auto">
+                    <label for="min_rating" class="block text-sm font-medium text-gray-700 mb-1">Minimum Rating</label>
+                    <select name="min_rating" id="min_rating" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                        <option value="">Any Rating</option>
+                        <option value="4.5" {% if selected_rating == '4.5' %}selected{% endif %}>4.5+</option>
+                        <option value="4.0" {% if selected_rating == '4.0' %}selected{% endif %}>4.0+</option>
+                        <option value="3.5" {% if selected_rating == '3.5' %}selected{% endif %}>3.5+</option>
+                        <option value="3.0" {% if selected_rating == '3.0' %}selected{% endif %}>3.0+</option>
+                    </select>
+                </div>
+
+                <div>
+                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                        <i class="fas fa-filter mr-2"></i>Filter
+                    </button>
+                </div>
+
+                {% if selected_cuisine or selected_rating %}
+                <div>
+                    <a href="{% url 'restaurants:restaurant_list' %}" class="text-gray-600 hover:text-primary text-sm">
+                        <i class="fas fa-times mr-1"></i>Clear Filters
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Restaurant List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for restaurant in restaurants %}
+            <div class="bg-white rounded-lg overflow-hidden shadow-md transition-transform hover:shadow-lg hover:-translate-y-1">
+                <div class="h-40 bg-gray-200 relative">
+                    {% if restaurant.banner_image %}
+                    <img src="{{ restaurant.banner_image.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                        <span class="text-gray-400"><i class="fas fa-utensils text-4xl"></i></span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Restaurant Logo -->
+                    <div class="absolute -bottom-6 left-4">
+                        <div class="w-16 h-16 rounded-lg overflow-hidden border-2 border-white bg-white shadow-md">
+                            {% if restaurant.logo %}
+                            <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }} logo" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                                <span class="text-primary font-bold text-xl">{{ restaurant.name|slice:":1" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 pt-8">
+                    <div class="flex justify-between items-start">
+                        <h2 class="text-lg font-semibold text-gray-800">{{ restaurant.name }}</h2>
+                        <div class="flex items-center bg-gray-100 px-2 py-1 rounded text-sm">
+                            <span class="text-yellow-500 mr-1"><i class="fas fa-star"></i></span>
+                            <span class="font-medium">{{ restaurant.rating }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center text-gray-500 text-sm mt-1">
+                        <span class="mr-2">{{ restaurant.get_cuisine_type_display }}</span>
+                        <span class="w-1 h-1 bg-gray-500 rounded-full mx-1"></span>
+                        <span>TK {{ restaurant.delivery_fee }}</span>
+                    </div>
+
+                    <div class="mt-2 text-sm text-gray-600 line-clamp-2">
+                        {{ restaurant.description|truncatechars:100 }}
+                    </div>
+
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="text-sm text-gray-600">
+                            <span class="mr-2"><i class="fas fa-clock text-primary"></i></span>
+                            <span>{{ restaurant.estimated_delivery_time }} mins</span>
+                        </div>
+
+                        <a href="{% url 'restaurants:restaurant_detail' restaurant.slug %}" class="bg-primary text-white px-3 py-1 rounded hover:bg-primary/90 transition-colors text-sm">
+                            View Menu
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-8">
+                <div class="text-gray-400 mb-4"><i class="fas fa-store-slash text-5xl"></i></div>
+                <h3 class="text-lg font-medium text-gray-700 mb-2">No restaurants found</h3>
+                <p class="text-gray-500 mb-4">Try changing your filters or check back later for new options.</p>
+                {% if selected_cuisine or selected_rating %}
+                <a href="{% url 'restaurants:restaurant_list' %}" class="text-primary hover:text-primary/80">
+                    <i class="fas fa-times mr-1"></i>Clear Filters
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

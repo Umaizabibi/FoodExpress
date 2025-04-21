@@ -1,0 +1,527 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ restaurant.name }} - FoodExpress{% endblock %}
+
+{% block content %}
+<!-- Restaurant Header -->
+<div class="relative">
+    <!-- Restaurant Banner -->
+    <div class="h-48 md:h-64 bg-gray-200">
+        {% if restaurant.banner_image %}
+        <img alt="{{ restaurant.name }}" class="w-full h-full object-cover" src="{{ restaurant.banner_image.url }}">
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center bg-gray-100">
+            <div class="text-gray-400"><i class="fas fa-image text-5xl"></i></div>
+        </div>
+        {% endif %}
+
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative -mt-16">
+        <!-- Restaurant Info Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex flex-wrap justify-between">
+                <div class="flex items-start space-x-4">
+                    <!-- Restaurant Logo -->
+                    <div class="w-20 h-20 rounded-lg overflow-hidden border-2 border-white bg-white shadow-md">
+                        {% if restaurant.logo %}
+                        <img alt="{{ restaurant.name }} logo" class="w-full h-full object-cover"
+                             src="{{ restaurant.logo.url }}">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                            <span class="text-primary font-bold text-2xl">{{ restaurant.name|slice:":1" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Restaurant Details -->
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">{{ restaurant.name }}</h1>
+                        <div class="flex items-center text-gray-500 text-sm mt-1">
+                            <span class="mr-2">{{ restaurant.get_cuisine_type_display }}</span>
+                            <span class="w-1 h-1 bg-gray-500 rounded-full mx-1"></span>
+                            <div class="flex items-center text-yellow-500">
+                                <i class="fas fa-star mr-1"></i>
+                                <span class="font-medium text-gray-700">{{ restaurant.rating }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 text-sm text-gray-600">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-map-marker-alt w-4 mr-2 text-gray-400"></i>
+                                <span>{{ restaurant.address }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock w-4 mr-2 text-gray-400"></i>
+                                <span>{{ restaurant.estimated_delivery_time }} mins Delivery Time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Restaurant Status and Delivery Info -->
+                <div class="mt-4 md:mt-0">
+                    {% if restaurant.is_open %}
+                    <div class="inline-block px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-medium mb-2">
+                        <i class="fas fa-check-circle mr-1"></i> Open Now
+                    </div>
+                    {% else %}
+                    <div class="inline-block px-3 py-1 rounded-full bg-red-100 text-red-800 text-sm font-medium mb-2">
+                        <i class="fas fa-times-circle mr-1"></i> Closed
+                    </div>
+                    {% endif %}
+
+                    <div class="text-sm text-gray-600">
+                        <div class="flex items-center mb-1">
+                            <i class="fas fa-truck w-4 mr-2 text-gray-400"></i>
+                            <span>Tk {{ restaurant.delivery_fee }} Delivery Fee</span>
+                        </div>
+                        {% if restaurant.minimum_order > 0 %}
+                        <div class="flex items-center">
+                            <i class="fas fa-shopping-basket w-4 mr-2 text-gray-400"></i>
+                            <span>Tk {{ restaurant.minimum_order }} minimum order</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restaurant Menu -->
+<section class="py-8">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-wrap -mx-4">
+            <!-- Menu Categories Sidebar -->
+            <div class="w-full lg:w-1/4 px-4 mb-6 lg:mb-0">
+                <div class="sticky top-24">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Menu Categories</h2>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <ul class="categories-nav">
+                            {% for category in categories %}
+                            <li>
+                                <a class="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b border-gray-100 category-link {% if forloop.first %}font-medium text-primary{% endif %}"
+                                   href="#category-{{ category.id }}">
+                                    {{ category.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="w-full lg:w-3/4 px-4">
+                {% csrf_token %}
+                {% for category in categories %}
+                <div class="mb-8" id="category-{{ category.id }}">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">{{ category.name }}</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for food_item in category.food_items.all %}
+                        {% if food_item.is_available %}
+                        <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow menu-item">
+                            <div class="flex items-start">
+                                <div class="flex-grow pr-4">
+                                    <h3 class="font-medium text-gray-800">{{ food_item.name }}</h3>
+
+                                    <div class="flex items-center flex-wrap gap-2 my-1">
+                                        {% if food_item.is_vegetarian %}
+                                        <span class="inline-block px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Vegetarian</span>
+                                        {% endif %}
+                                        {% if food_item.is_vegan %}
+                                        <span class="inline-block px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Vegan</span>
+                                        {% endif %}
+                                        {% if food_item.is_gluten_free %}
+                                        <span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Gluten-Free</span>
+                                        {% endif %}
+                                        {% if food_item.spice_level > 0 %}
+                                        <span class="inline-block px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded">
+                                            Spicy
+                                            {% for i in "12345" %}
+                                            {% if forloop.counter <= food_item.spice_level %}
+                                            <i class="fas fa-pepper-hot text-xs"></i>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="text-sm text-gray-600 my-2 line-clamp-2">{{ food_item.description }}</p>
+
+                                    <div class="font-semibold text-gray-800 mt-1">TK {{ food_item.price }}</div>
+                                </div>
+
+                                <div class="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                    {% if food_item.image %}
+                                    <img alt="{{ food_item.name }}" class="w-full h-full object-cover"
+                                         src="{{ food_item.image.url }}">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <i class="fas fa-utensils text-gray-300 text-xl"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mt-3 flex justify-end">
+                                <button class="add-to-cart-btn bg-primary text-white px-3 py-1.5 rounded text-sm hover:bg-primary/90 transition-colors"
+                                        data-item-id="{{ food_item.id }}"
+                                        data-item-name="{{ food_item.name }}"
+                                        data-item-price="{{ food_item.price }}">
+                                    <i class="fas fa-plus mr-1"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add to Cart Modal (kept but not used) -->
+<div class="fixed inset-0 z-50 hidden overflow-y-auto" id="addToCartModal">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div aria-hidden="true" class="fixed inset-0 transition-opacity">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form action="{% url 'orders:add_to_cart' %}" id="addToCartForm" method="post">
+                {% csrf_token %}
+                <input id="food_item_id" name="food_item_id" type="hidden" value="">
+                <input id="confirm_clear" name="confirm_clear" type="hidden" value="false">
+
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"></h3>
+                            <div class="mt-4">
+                                <div class="w-full mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                                           for="quantity">Quantity</label>
+                                    <div class="flex items-center">
+                                        <button class="bg-gray-200 px-3 py-1 rounded-l" id="decrease-qty" type="button">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input class="w-16 py-1 px-2 text-center border-t border-b border-gray-300"
+                                               id="quantity" min="1" name="quantity" type="number"
+                                               value="1">
+                                        <button class="bg-gray-200 px-3 py-1 rounded-r" id="increase-qty" type="button">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="w-full">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                                           for="special_instructions">Special Instructions
+                                        (Optional)</label>
+                                    <textarea
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                            id="special_instructions" name="special_instructions"
+                                            placeholder="Any special requests or allergies?"
+                                            rows="3"></textarea>
+                                </div>
+
+                                <div class="mt-4 text-right font-semibold">
+                                    Total: TK<span id="item-total">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm"
+                            type="submit">
+                        Add to Cart
+                    </button>
+                    <button class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            id="close-modal"
+                            type="button">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Restaurant Mismatch Confirmation Modal (kept but not used) -->
+<div class="fixed inset-0 z-50 hidden overflow-y-auto" id="restaurantMismatchModal">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div aria-hidden="true" class="fixed inset-0 transition-opacity">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">
+                            Clear Your Cart?
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500" id="mismatch-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                        id="confirm-clear-cart"
+                        type="button">
+                    Clear Cart & Add
+                </button>
+                <button class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                        id="cancel-clear-cart"
+                        type="button">
+                    Keep Current Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        const addToCartModal = document.getElementById('addToCartModal');
+        const restaurantMismatchModal = document.getElementById('restaurantMismatchModal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const foodItemIdInput = document.getElementById('food_item_id');
+        const modalTitle = document.getElementById('modal-title');
+        const quantityInput = document.getElementById('quantity');
+        const decreaseQtyBtn = document.getElementById('decrease-qty');
+        const increaseQtyBtn = document.getElementById('increase-qty');
+        const itemTotalSpan = document.getElementById('item-total');
+        const addToCartForm = document.getElementById('addToCartForm');
+        const confirmClear = document.getElementById('confirm_clear');
+        const confirmClearCartBtn = document.getElementById('confirm-clear-cart');
+        const cancelClearCartBtn = document.getElementById('cancel-clear-cart');
+        const mismatchMessage = document.getElementById('mismatch-message');
+
+        let currentItemPrice = 0;
+
+        // Direct Add to Cart button click handler (bypassing modal)
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.dataset.itemId;
+                const itemName = this.dataset.itemName;
+                
+                // Create form data for direct submission
+                const formData = new FormData();
+                formData.append('food_item_id', itemId);
+                formData.append('quantity', 1); // Default to quantity 1
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                
+                // Send AJAX request directly to add to cart
+                fetch('{% url 'orders:add_to_cart' %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.status === 401 || response.status === 403) {
+                        window.location.href = "/login/?next=" + encodeURIComponent(window.location.pathname);
+                        throw new Error('authentication_required');
+                    }
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update cart count in header
+                        const cartCountElement = document.querySelector('.fa-shopping-cart + span');
+                        if (cartCountElement) {
+                            cartCountElement.textContent = data.cart_count;
+                            if (data.cart_count > 0) {
+                                cartCountElement.classList.remove('hidden');
+                            }
+                        }
+                        
+                        // Show a consistent message regardless of whether item was added or updated
+                        const itemName = this.dataset.itemName;
+                        showToast(itemName + " added to cart", 'success');
+                    }
+                    else if (data.status === 'restaurant_mismatch') {
+                        // Ask user about clearing cart with a standard confirm dialog
+                        if (confirm(data.message)) {
+                            // If user confirms, resubmit with confirm_clear=true
+                            formData.append('confirm_clear', 'true');
+                            fetch('{% url 'orders:add_to_cart' %}', {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                credentials: 'same-origin'
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    showToast(data.message, 'success');
+                                    // Update cart count
+                                    const cartCountElement = document.querySelector('.fa-shopping-cart + span');
+                                    if (cartCountElement) {
+                                        cartCountElement.textContent = data.cart_count;
+                                        if (data.cart_count > 0) {
+                                            cartCountElement.classList.remove('hidden');
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        showToast(data.message || 'Error adding item to cart', 'error');
+                    }
+                })
+                .catch(error => {
+                    if (error.message === 'authentication_required') {
+                        return; // Already handling the redirect
+                    }
+                    showToast('Error adding item to cart. Please try again.', 'error');
+                });
+            });
+        });
+
+        // The following code is kept but not actively used since we're bypassing the modal
+        // Close modal button
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', function() {
+                addToCartModal.classList.add('hidden');
+            });
+        }
+
+        // Update quantity controls (for modal)
+        if (decreaseQtyBtn) {
+            decreaseQtyBtn.addEventListener('click', function() {
+                const currentQty = parseInt(quantityInput.value);
+                if (currentQty > 1) {
+                    quantityInput.value = currentQty - 1;
+                    updateItemTotal();
+                }
+            });
+        }
+
+        if (increaseQtyBtn) {
+            increaseQtyBtn.addEventListener('click', function() {
+                const currentQty = parseInt(quantityInput.value);
+                quantityInput.value = currentQty + 1;
+                updateItemTotal();
+            });
+        }
+
+        if (quantityInput) {
+            quantityInput.addEventListener('change', updateItemTotal);
+        }
+
+        function updateItemTotal() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            const total = Math.round(currentItemPrice * quantity);
+            itemTotalSpan.textContent = total;
+        }
+
+        // Restaurant mismatch modal handlers
+        if (confirmClearCartBtn) {
+            confirmClearCartBtn.addEventListener('click', function() {
+                confirmClear.value = 'true';
+                restaurantMismatchModal.classList.add('hidden');
+                addToCartForm.dispatchEvent(new Event('submit'));
+            });
+        }
+
+        if (cancelClearCartBtn) {
+            cancelClearCartBtn.addEventListener('click', function() {
+                restaurantMismatchModal.classList.add('hidden');
+            });
+        }
+
+        // Scroll spy for categories
+        const categoryLinks = document.querySelectorAll('.category-link');
+        const categoryElements = document.querySelectorAll('[id^="category-"]');
+
+        function setActiveCategory() {
+            let currentCategoryId = null;
+
+            categoryElements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+                if (rect.top <= 100 && rect.bottom >= 100) {
+                    currentCategoryId = element.id;
+                }
+            });
+
+            categoryLinks.forEach(link => {
+                const href = link.getAttribute('href').substring(1);
+                if (href === currentCategoryId) {
+                    link.classList.add('font-medium', 'text-primary');
+                } else {
+                    link.classList.remove('font-medium', 'text-primary');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', setActiveCategory);
+
+        // Smooth scroll to category
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+
+                window.scrollTo({
+                    top: targetElement.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed right-4 bottom-4 z-50 px-4 py-3 rounded shadow-lg ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <div class="mr-2">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    </div>
+                    <div>${message}</div>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 500);
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

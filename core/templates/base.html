@@ -1,0 +1,301 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>{% block title %}FoodExpress - Food Delivery App{% endblock %}</title>
+    <meta content="Order delicious food from your favorite restaurants" name="description">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#E91E63',
+                        secondary: '#9C27B0',
+                        foodGray: '#8E9196',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen font-sans">
+<!-- Header/Navbar -->
+<header class="sticky top-0 z-50 bg-white shadow-md">
+    <div class="container mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <a class="flex items-center" href="{% url 'home' %}">
+                    <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+                        FoodExpress
+                    </h1>
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="md:hidden flex items-center p-2 text-gray-700 hover:text-primary focus:outline-none" aria-label="Toggle menu">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a class="text-sm font-medium {% if request.path == '/' %}text-primary{% else %}text-gray-700 hover:text-primary{% endif %}"
+                   href="{% url 'home' %}">
+                    Home
+                </a>
+                <a class="text-sm font-medium {% if 'restaurants/list' in request.path %}text-primary{% else %}text-gray-700 hover:text-primary{% endif %}"
+                   href="{% url 'restaurants:restaurant_list' %}">
+                    Restaurants
+                </a>
+                {% if user.is_authenticated %}
+                <a class="text-sm font-medium {% if 'orders/history' in request.path %}text-primary{% else %}text-gray-700 hover:text-primary{% endif %}"
+                   href="{% url 'orders:order_history' %}">
+                    My Orders
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- User Actions -->
+            <div class="flex items-center space-x-4">
+                <a class="p-2 text-gray-700 hover:text-primary" href="#" aria-label="Search">
+                    <i class="fas fa-search text-base"></i>
+                </a>
+                <a class="p-2 text-gray-700 hover:text-primary relative" href="{% url 'orders:cart_view' %}" aria-label="Cart">
+                    <i class="fas fa-shopping-cart text-base"></i>
+                    {% if cart_item_count > 0 %}
+                    <span class="absolute -top-2 -right-2 bg-primary text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                        {{ cart_item_count }}
+                    </span>
+                    {% endif %}
+                </a>
+
+                {% if user.is_authenticated %}
+                <div class="relative">
+                    <button class="flex items-center space-x-1 text-gray-700 hover:text-primary px-3 py-2 rounded-md border border-gray-200 hover:border-primary transition-colors"
+                            id="accountDropdownButton" aria-expanded="false" aria-label="Account menu">
+                        <span class="text-sm font-medium">Account</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md hidden z-50"
+                         id="accountDropdown">
+                        <a class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100" href="{% url 'profile' %}">My Profile</a>
+                        <a class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100" href="{% url 'orders:order_history' %}">My Orders</a>
+                        <div class="border-t border-gray-200"></div>
+                        <form method="post" action="{% url 'logout' %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <a class="flex items-center text-white bg-primary hover:bg-primary/90 px-4 py-2 rounded-md transition-colors text-sm font-medium"
+                   href="{% url 'login' %}">
+                    Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mobile Navigation (Hidden by default) -->
+        <div id="mobile-menu" class="md:hidden hidden mt-3 pt-3 border-t border-gray-200">
+            <nav class="flex flex-col space-y-3 pb-3">
+                <a class="text-base font-medium px-2 py-2 rounded-md {% if request.path == '/' %}bg-primary/10 text-primary{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                   href="{% url 'home' %}">
+                    Home
+                </a>
+                <a class="text-base font-medium px-2 py-2 rounded-md {% if 'restaurants/list' in request.path %}bg-primary/10 text-primary{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                   href="{% url 'restaurants:restaurant_list' %}">
+                    Restaurants
+                </a>
+                {% if user.is_authenticated %}
+                <a class="text-base font-medium px-2 py-2 rounded-md {% if 'orders/history' in request.path %}bg-primary/10 text-primary{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                   href="{% url 'orders:order_history' %}">
+                    My Orders
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+</header>
+
+<!-- Messages -->
+{% if messages %}
+<div class="container mx-auto px-4 py-3">
+    {% for message in messages %}
+    <div class="{% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %} px-4 py-3 rounded relative mb-3"
+         role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+        <button class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()" type="button">
+            <span class="sr-only">Close</span>
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Main Content -->
+<main class="flex-grow">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-100 pt-8 pb-6 mt-10">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+                <h3 class="text-xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text mb-4">
+                    FoodExpress
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                    Order food from your favorite restaurants and have it delivered to your doorstep.
+                </p>
+                <div class="flex space-x-6">
+                    <a class="text-gray-600 hover:text-primary p-1" href="#" aria-label="Facebook">
+                        <i class="fab fa-facebook-f text-lg"></i>
+                    </a>
+                    <a class="text-gray-600 hover:text-primary p-1" href="#" aria-label="Instagram">
+                        <i class="fab fa-instagram text-lg"></i>
+                    </a>
+                    <a class="text-gray-600 hover:text-primary p-1" href="#" aria-label="Twitter">
+                        <i class="fab fa-twitter text-lg"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-6 sm:mt-0">
+                <h4 class="text-sm font-semibold uppercase text-gray-800 mb-4">About</h4>
+                <ul class="space-y-3">
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            About Us
+                        </a>
+                    </li>
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            Careers
+                        </a>
+                    </li>
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            Blog
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-6 md:mt-0">
+                <h4 class="text-sm font-semibold uppercase text-gray-800 mb-4">Help</h4>
+                <ul class="space-y-3">
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            Contact Us
+                        </a>
+                    </li>
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            FAQ
+                        </a>
+                    </li>
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            Terms of Service
+                        </a>
+                    </li>
+                    <li>
+                        <a class="text-gray-600 hover:text-primary text-sm block py-1" href="#">
+                            Privacy Policy
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-6 md:mt-0">
+                <h4 class="text-sm font-semibold uppercase text-gray-800 mb-4">Customer Support</h4>
+                <p class="text-gray-600 text-sm mb-4">
+                    We value your feedback and are committed to resolving any issues.
+                </p>
+                <div>
+                    <a class="bg-primary text-white rounded-md px-4 py-3 w-full flex items-center justify-center space-x-2 hover:bg-primary/90 transition-colors"
+                       href="#">
+                        <i class="fas fa-comment-alt mr-2"></i>
+                        <span class="font-medium">Submit a Complaint</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 mt-8 pt-6">
+            <p class="text-gray-600 text-sm text-center">
+                &copy; {% now "Y" %} FoodExpress. All rights reserved.
+            </p>
+        </div>
+    </div>
+</footer>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Account dropdown functionality
+        const dropdownButton = document.getElementById('accountDropdownButton');
+        const dropdown = document.getElementById('accountDropdown');
+
+        if (dropdownButton && dropdown) {
+            // Toggle dropdown when clicking the button
+            dropdownButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('hidden');
+                dropdownButton.setAttribute('aria-expanded', dropdown.classList.contains('hidden') ? 'false' : 'true');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target) && e.target !== dropdownButton) {
+                    dropdown.classList.add('hidden');
+                    dropdownButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        // Mobile menu functionality
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+                const isExpanded = mobileMenu.classList.contains('hidden') ? 'false' : 'true';
+                mobileMenuButton.setAttribute('aria-expanded', isExpanded);
+                
+                // Change icon based on state
+                const icon = mobileMenuButton.querySelector('i');
+                if (isExpanded === 'true') {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+</body>
+</html>

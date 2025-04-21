@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - FoodExpress{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-8">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text mb-6">
+                    FoodExpress
+                </h1>
+                <h2 class="text-2xl font-semibold text-gray-800">Create an Account</h2>
+            </div>
+
+            <form method="post" action="{% url 'register' %}" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                    </label>
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <input
+                            type="email"
+                            name="email"
+                            id="id_email"
+                            placeholder="Enter your email"
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            required
+                        >
+                    </div>
+                    {% if form.email.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {{ form.email.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_phone" class="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number
+                    </label>
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <input
+                            type="tel"
+                            name="phone"
+                            id="id_phone"
+                            placeholder="Enter your phone number"
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            required
+                        >
+                    </div>
+                    {% if form.phone.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {{ form.phone.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <input
+                            type="password"
+                            name="password"
+                            id="id_password"
+                            placeholder="Create a password"
+                            class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            required
+                        >
+                        <button type="button" onclick="togglePassword('id_password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-eye" id="id_password_icon"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {{ form.password.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="text-xs text-gray-500 mt-1">
+                        Password must be at least 8 characters long and contain letters and numbers.
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button
+                        type="submit"
+                        class="w-full py-3 px-4 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors"
+                    >
+                        Sign Up
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Already have an account?
+                    <a href="{% url 'login' %}" class="text-primary hover:text-primary/80 font-medium">
+                        Login
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function togglePassword(id) {
+        const passwordInput = document.getElementById(id);
+        const passwordIcon = document.getElementById(id + '_icon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordIcon.classList.remove('fa-eye');
+            passwordIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            passwordIcon.classList.remove('fa-eye-slash');
+            passwordIcon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}
+
+{% endblock %}

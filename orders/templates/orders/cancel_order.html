@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cancel Order - FoodExpress{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-md mx-auto">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-100 text-red-600 mb-4">
+                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">Cancel Order</h1>
+                </div>
+
+                <p class="text-gray-600 mb-6">
+                    Are you sure you want to cancel order <strong>#{{ order.order_number }}</strong> from <strong>{{ order.restaurant.name }}</strong>?
+                </p>
+
+                <div class="bg-gray-50 p-4 rounded mb-6">
+                    <p class="text-sm text-gray-700">
+                        <strong>Order Status:</strong> {{ order.get_status_display }}
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        <strong>Order Date:</strong> {{ order.created_at|date:"F j, Y, g:i a" }}
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        <strong>Total Amount:</strong> TK {{ order.total_amount }}
+                    </p>
+                </div>
+
+                <form method="post" action="{% url 'orders:cancel_order' order.order_number %}">
+                    {% csrf_token %}
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition-colors">
+                            Cancel Order
+                        </button>
+                        <a href="{% url 'orders:order_detail' order.order_number %}" class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300 transition-colors text-center">
+                            Go Back
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

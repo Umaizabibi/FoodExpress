@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load order_tags %}
+{% block title %}Order Details - FoodExpress{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Order Details</h1>
+            <a class="text-primary hover:text-primary/80" href="{% url 'orders:order_history' %}">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Orders
+            </a>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <!-- Order Header -->
+            <div class="border-b border-gray-200 px-6 py-4">
+                <div class="flex flex-wrap justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800">Order #{{ order.order_number }}</h2>
+                        <div class="text-sm text-gray-500 mt-1">
+                            <span>{{ order.created_at|date:"F j, Y, g:i a" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 sm:mt-0">
+                        <span class="px-3 py-1 rounded-full 
+                        {% if order.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                        {% elif order.status == 'CONFIRMED' %}bg-blue-100 text-blue-800
+                        {% elif order.status == 'PREPARING' %}bg-purple-100 text-purple-800
+                        {% elif order.status == 'OUT_FOR_DELIVERY' %}bg-indigo-100 text-indigo-800
+                        {% elif order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                        {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800{% endif %} 
+                        text-xs font-medium">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracking Section -->
+            {% if order.status != 'DELIVERED' and order.status != 'CANCELLED' %}
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div class="mb-2 flex justify-between items-center">
+                    <h3 class="text-sm font-medium text-gray-700">Order Tracking</h3>
+                    <div class="text-sm">
+                        <span class="font-medium text-gray-700">Estimated Delivery:</span>
+                        <span class="text-gray-600">{{ order.estimated_delivery_time|date:"g:i a" }}</span>
+                    </div>
+                </div>
+
+                <div class="relative pt-4">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-primary h-2.5 rounded-full
+                            {% if order.status == 'PENDING' %}w-1/5
+                            {% elif order.status == 'CONFIRMED' %}w-2/5
+                            {% elif order.status == 'PREPARING' %}w-3/5
+                            {% elif order.status == 'OUT_FOR_DELIVERY' %}w-4/5
+                            {% endif %}"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between text-xs text-gray-600 px-2">
+                        <div class="text-center {% if order.status in 'PENDING CONFIRMED PREPARING OUT_FOR_DELIVERY' %}text-primary font-medium{% endif %}">
+                            <div class="mb-1"><i class="fas fa-check-circle"></i></div>
+                            <span>Order Placed</span>
+                        </div>
+                        <div class="text-center {% if order.status in 'CONFIRMED PREPARING OUT_FOR_DELIVERY' %}text-primary font-medium{% endif %}">
+                            <div class="mb-1"><i
+                                    class="fas {% if order.status in 'CONFIRMED PREPARING OUT_FOR_DELIVERY' %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                            </div>
+                            <span>Confirmed</span>
+                        </div>
+                        <div class="text-center {% if order.status in 'PREPARING OUT_FOR_DELIVERY' %}text-primary font-medium{% endif %}">
+                            <div class="mb-1"><i
+                                    class="fas {% if order.status in 'PREPARING OUT_FOR_DELIVERY' %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                            </div>
+                            <span>Preparing</span>
+                        </div>
+                        <div class="text-center {% if order.status == 'OUT_FOR_DELIVERY' %}text-primary font-medium{% endif %}">
+                            <div class="mb-1"><i
+                                    class="fas {% if order.status == 'OUT_FOR_DELIVERY' %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                            </div>
+                            <span>On the Way</span>
+                        </div>
+                        <div class="text-center {% if order.status == 'DELIVERED' %}text-primary font-medium{% endif %}">
+                            <div class="mb-1"><i
+                                    class="fas {% if order.status == 'DELIVERED' %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                            </div>
+                            <span>Delivered</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Restaurant Info -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-lg overflow-hidden mr-4">
+                        {% if order.restaurant.logo %}
+                        <img alt="{{ order.restaurant.name }}" class="w-full h-full object-cover"
+                             src="{{ order.restaurant.logo.url }}">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                            <span class="text-primary font-bold text-lg">{{ order.restaurant.name|slice:":1" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">{{ order.restaurant.name }}</h3>
+                        <div class="flex items-center text-xs text-gray-500 mt-1">
+                            <span class="mr-2">{{ order.restaurant.get_cuisine_type_display }}</span>
+                            <span class="w-1 h-1 bg-gray-500 rounded-full mx-1"></span>
+                            <i class="fas fa-phone-alt text-xs mr-1"></i>
+                            <span>{{ order.restaurant.phone|default:"N/A" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-sm font-medium text-gray-700 mb-3">Order Items</h3>
+
+                <div class="space-y-4">
+                    {% for item in order_items %}
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start">
+                            <span class="inline-block bg-gray-100 text-gray-700 rounded-full w-5 h-5 text-xs flex items-center justify-center mr-2 mt-0.5">{{ item.quantity }}</span>
+                            <div>
+                                <span class="text-sm text-gray-700">{{ item.food_item.name }}</span>
+                                <div class="text-xs text-gray-500 mt-1">TK {{ item.price }} each</div>
+                                {% if item.special_instructions %}
+                                <p class="text-xs text-gray-500 mt-1 italic">"{{ item.special_instructions }}"</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium">TK {{ item.total_price }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Delivery and Payment Info -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-700 mb-2">Delivery Details</h3>
+                        <div class="text-sm">
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt mt-1 mr-2 text-gray-400"></i>
+                                <p class="text-gray-600">{{ order.delivery_address }}</p>
+                            </div>
+
+                            {% if order.delivery_instructions %}
+                            <div class="flex items-start mt-2">
+                                <i class="fas fa-info-circle mt-1 mr-2 text-gray-400"></i>
+                                <p class="text-gray-500 italic">{{ order.delivery_instructions }}</p>
+                            </div>
+                            {% endif %}
+
+                            <div class="flex items-center mt-2">
+                                <i class="fas fa-phone-alt mr-2 text-gray-400"></i>
+                                <p class="text-gray-600">{{ order.profile.phone | default:"N/A" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-700 mb-2">Payment Information</h3>
+                        <div class="text-sm">
+                            <div class="flex items-center">
+                                <i class="fas {% if order.payment_method == 'CASH' %}fa-money-bill-wave{% elif order.payment_method == 'CREDIT_CARD' %}fa-credit-card{% elif order.payment_method == 'MOBILE_PAYMENT' %}fa-mobile-alt{% else %}fa-credit-card{% endif %} mr-2 text-gray-400"></i>
+                                <p class="text-gray-600">
+                                    <span class="font-medium">Method:</span> {{ order.get_payment_method_display }}
+                                </p>
+                            </div>
+
+                            <div class="flex items-center mt-2">
+                                <i class="fas {% if order.is_paid %}fa-check-circle text-green-500{% else %}fa-clock text-yellow-500{% endif %} mr-2"></i>
+                                <p class="text-gray-600">
+                                    <span class="font-medium">Status:</span>
+                                    {% if order.is_paid %}
+                                    <span class="text-green-600">Paid</span>
+                                    {% else %}
+                                    <span class="text-yellow-600">Pending</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="px-6 py-4 bg-gray-50">
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span>TK {{ order.total_amount|subtract:order.delivery_fee|floatformat:0 }}</span>
+                    </div>
+
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Delivery Fee</span>
+                        <span>TK {{ order.delivery_fee|floatformat:0 }}</span>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-2 mt-2">
+                        <div class="flex justify-between font-medium">
+                            <span>Total</span>
+                            <span>TK {{ order.total_amount|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4 justify-center sm:justify-start">
+            {% if order.status == 'DELIVERED' %}
+            <a class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+               href="{% url 'restaurants:restaurant_detail' order.restaurant.slug %}">
+                <i class="fas fa-utensils mr-2"></i> Order Again
+            </a>
+            {% endif %}
+
+            {% if order.can_cancel %}
+            <a class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+               href="{% url 'orders:cancel_order' order.order_number %}">
+                <i class="fas fa-times mr-2"></i> Cancel Order
+            </a>
+            {% endif %}
+
+            <a class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+               href="#">
+                <i class="fas fa-headset mr-2"></i> Get Help
+            </a>
+        </div>
+    </div>
+</section>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

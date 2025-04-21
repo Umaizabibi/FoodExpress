@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - FoodExpress{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Checkout</h1>
+        
+        <div class="flex flex-wrap -mx-4">
+            <!-- Checkout Form -->
+            <div class="w-full lg:w-2/3 px-4 mb-6 lg:mb-0">
+                <form id="checkout-form" method="post" action="{% url 'orders:place_order' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Delivery Information -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Delivery Information</h2>
+                        
+                        <div class="mb-4">
+                            <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+                            <textarea name="delivery_address" id="delivery_address" rows="3" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                      required>{{ profile.address }}</textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="delivery_instructions" class="block text-sm font-medium text-gray-700 mb-1">Delivery Instructions (Optional)</label>
+                            <textarea name="delivery_instructions" id="delivery_instructions" rows="2" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                      placeholder="E.g., Ring the bell, leave at the door, etc."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" name="phone" id="phone" value="{{ profile.phone }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Payment Method</h2>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input id="payment_cash" name="payment_method" type="radio" value="CASH" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" checked>
+                                <label for="payment_cash" class="ml-3 block text-sm font-medium text-gray-700">
+                                    Cash on Delivery
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <input id="payment_card" name="payment_method" type="radio" value="CREDIT_CARD" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <label for="payment_card" class="ml-3 block text-sm font-medium text-gray-700">
+                                    Credit/Debit Card
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <input id="payment_mobile" name="payment_method" type="radio" value="MOBILE_PAYMENT" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <label for="payment_mobile" class="ml-3 block text-sm font-medium text-gray-700">
+                                    Mobile Payment
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Credit Card Form (hidden by default) -->
+                        <div id="credit-card-form" class="mt-4 hidden">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2">
+                                    <label for="card_number" class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                                    <input type="text" name="card_number" id="card_number" placeholder="XXXX XXXX XXXX XXXX" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <div>
+                                    <label for="expiry_date" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                                    <input type="text" name="expiry_date" id="expiry_date" placeholder="MM/YY" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <div>
+                                    <label for="cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                                    <input type="text" name="cvv" id="cvv" placeholder="XXX" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <div class="col-span-2">
+                                    <label for="card_name" class="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
+                                    <input type="text" name="card_name" id="card_name" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile Payment Form (hidden by default) -->
+                        <div id="mobile-payment-form" class="mt-4 hidden">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2">
+                                    <label for="mobile_number" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                                    <input type="tel" name="mobile_number" id="mobile_number" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="w-full lg:w-1/3 px-4">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Summary</h2>
+                    
+                    <!-- Restaurant Info -->
+                    <div class="flex items-center mb-4 pb-4 border-b border-gray-100">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden mr-3">
+                            {% if cart.restaurant.logo %}
+                            <img src="{{ cart.restaurant.logo.url }}" alt="{{ cart.restaurant.name }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                                <span class="text-primary font-bold text-sm">{{ cart.restaurant.name|slice:":1" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-800">{{ cart.restaurant.name }}</h3>
+                            <div class="text-xs text-gray-500">Estimated delivery: {{ cart.restaurant.estimated_delivery_time }} mins</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Items -->
+                    <div class="max-h-48 overflow-y-auto mb-4 pb-4 border-b border-gray-100">
+                        {% for item in cart_items %}
+                        <div class="flex justify-between py-2">
+                            <div class="flex items-start">
+                                <span class="inline-block bg-gray-100 text-gray-700 rounded-full w-5 h-5 text-xs flex items-center justify-center mr-2">{{ item.quantity }}</span>
+                                <span class="text-sm text-gray-700">{{ item.food_item.name }}</span>
+                            </div>
+                            <span class="text-sm font-medium">TK {{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Order Totals -->
+                    <div class="divide-y divide-gray-100">
+                        <div class="py-2 flex justify-between">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="font-medium">TK {{ subtotal }}</span>
+                        </div>
+                        
+                        <div class="py-2 flex justify-between">
+                            <span class="text-gray-600">Delivery Fee</span>
+                           <span class="font-medium">TK {{ delivery_fee }}</span>
+                        </div>
+                        
+<div class="py-3 flex justify-between text-lg font-semibold">
+    <span>Total</span>
+    <span>TK {{ grand_total }}</span>
+</div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <button type="submit" form="checkout-form" class="block w-full bg-primary text-white px-4 py-3 rounded text-center font-medium hover:bg-primary/90 transition-colors">
+                            Place Order
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'orders:cart_view' %}" class="text-primary hover:text-primary/80 text-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Back to Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentCash = document.getElementById('payment_cash');
+        const paymentCard = document.getElementById('payment_card');
+        const paymentMobile = document.getElementById('payment_mobile');
+        const creditCardForm = document.getElementById('credit-card-form');
+        const mobilePaymentForm = document.getElementById('mobile-payment-form');
+        
+        function togglePaymentForms() {
+            if (paymentCard.checked) {
+                creditCardForm.classList.remove('hidden');
+                mobilePaymentForm.classList.add('hidden');
+            } else if (paymentMobile.checked) {
+                creditCardForm.classList.add('hidden');
+                mobilePaymentForm.classList.remove('hidden');
+            } else {
+                creditCardForm.classList.add('hidden');
+                mobilePaymentForm.classList.add('hidden');
+            }
+        }
+        
+        paymentCash.addEventListener('change', togglePaymentForms);
+        paymentCard.addEventListener('change', togglePaymentForms);
+        paymentMobile.addEventListener('change', togglePaymentForms);
+        
+        togglePaymentForms();
+        
+        // Form validation
+        const checkoutForm = document.getElementById('checkout-form');
+        checkoutForm.addEventListener('submit', function(e) {
+            const deliveryAddress = document.getElementById('delivery_address');
+            const phone = document.getElementById('phone');
+            
+            if (!deliveryAddress.value.trim()) {
+                e.preventDefault();
+                alert('Please enter a delivery address');
+                deliveryAddress.focus();
+                return false;
+            }
+            
+            if (!phone.value.trim()) {
+                e.preventDefault();
+                alert('Please enter a phone number');
+                phone.focus();
+                return false;
+            }
+            
+            if (paymentCard.checked) {
+                const cardNumber = document.getElementById('card_number');
+                const expiryDate = document.getElementById('expiry_date');
+                const cvv = document.getElementById('cvv');
+                const cardName = document.getElementById('card_name');
+                
+                if (!cardNumber.value.trim() || !expiryDate.value.trim() || !cvv.value.trim() || !cardName.value.trim()) {
+                    e.preventDefault();
+                    alert('Please fill in all card details');
+                    return false;
+                }
+            }
+            
+            if (paymentMobile.checked) {
+                const mobileNumber = document.getElementById('mobile_number');
+                
+                if (!mobileNumber.value.trim()) {
+                    e.preventDefault();
+                    alert('Please enter a mobile number for payment');
+                    mobileNumber.focus();
+                    return false;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

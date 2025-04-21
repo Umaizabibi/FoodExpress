@@ -1,0 +1,669 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load order_tags %}
+{% block title %}Your Cart - FoodExpress{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Your Cart</h1>
+
+        {% if cart_items %}
+        <div class="flex flex-wrap -mx-4">
+            <!-- Cart Items -->
+            <div class="w-full lg:w-2/3 px-4 mb-6 lg:mb-0">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <!-- Restaurant Info -->
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden mr-4">
+                                {% if cart.restaurant.logo %}
+                                <img alt="{{ cart.restaurant.name }}" class="w-full h-full object-cover"
+                                     src="{{ cart.restaurant.logo.url }}">
+                                {% else %}
+                                <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                                    <span class="text-primary font-bold text-lg">{{ cart.restaurant.name|slice:":1" }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h2 class="font-medium text-gray-800">{{ cart.restaurant.name }}</h2>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <span class="mr-2">{{ cart.restaurant.get_cuisine_type_display }}</span>
+                                    <i class="fas fa-clock text-xs ml-2 mr-1"></i>
+                                    <span>{{ cart.restaurant.estimated_delivery_time }} mins</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Items List -->
+                    <div class="divide-y divide-gray-100">
+                        {% csrf_token %}
+                        {% for item in cart_items %}
+                        <div class="p-4 cart-item" data-item-id="{{ item.id }}" data-item-price="{{ item.food_item.price }}" data-food-id="{{ item.food_item.id }}">
+                            <div class="flex items-start">
+                                <div class="flex-grow">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-medium text-gray-800">{{ item.food_item.name }}</h3>
+                                        <div class="font-semibold text-gray-800 item-price">TK {{ item.total_price }}</div>
+                                    </div>
+
+                                    {% if item.special_instructions %}
+                                    <div class="text-sm text-gray-500 mt-1">
+                                        <strong>Instructions:</strong> {{ item.special_instructions }}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="flex items-center justify-between mt-3">
+                                        <div class="flex items-center">
+                                            <button type="button" class="decrease-qty bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-l transition-colors">
+                                                <i class="fas fa-minus text-xs"></i>
+                                            </button>
+                                            <input class="item-qty w-12 text-center py-1 border-t border-b border-gray-200"
+                                                   min="1" type="number"
+                                                   value="{{ item.quantity }}">
+                                            <button type="button" class="increase-qty bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-r transition-colors">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                        </div>
+
+                                        <button type="button" class="remove-item text-red-500 hover:text-red-700 text-sm transition-colors">
+                                            <i class="fas fa-trash-alt mr-1"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Cart Actions -->
+                    <div class="px-6 py-4 bg-gray-50 flex justify-between items-center">
+                        <button type="button" class="text-gray-500 hover:text-red-500 text-sm transition-colors" id="clear-cart">
+                            <i class="fas fa-trash mr-1"></i> Clear Cart
+                        </button>
+
+                        <button type="button" class="text-gray-500 hover:text-primary text-sm transition-colors mr-4" id="merge-items">
+                            <i class="fas fa-compress-alt mr-1"></i> Merge Duplicates
+                        </button>
+
+                        <button type="button" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition-colors"
+                                id="update-cart">
+                            Update Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="w-full lg:w-1/3 px-4 order-summary">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Summary</h2>
+
+                    <div class="divide-y divide-gray-100">
+                        <div class="py-3 flex justify-between">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="font-medium subtotal-value">TK {{ cart.total_price }}</span>
+                        </div>
+
+                        <div class="py-3 flex justify-between">
+                            <span class="text-gray-600">Delivery Fee</span>
+                            <span class="font-medium delivery-fee-value">TK {{ cart.restaurant.delivery_fee|floatformat:0 }}</span>
+                        </div>
+
+                        <div class="py-3 flex justify-between text-lg font-semibold">
+                            <span>Total</span>
+                            <span class="total-value">TK {{ cart.total_price|add:cart.restaurant.delivery_fee }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <a class="block w-full bg-primary text-white px-4 py-3 rounded text-center font-medium hover:bg-primary/90 transition-colors"
+                           href="{% url 'orders:checkout' %}">
+                            Proceed to Checkout
+                        </a>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <a class="text-primary hover:text-primary/80 text-sm"
+                           href="{% url 'restaurants:restaurant_detail' cart.restaurant.slug %}">
+                            <i class="fas fa-utensils mr-1"></i> Add More Items
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <div class="text-gray-400 mb-4"><i class="fas fa-shopping-cart text-6xl"></i></div>
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h2>
+            <p class="text-gray-500 mb-6">Add some delicious items from our restaurants to your cart.</p>
+            <a class="inline-block bg-primary text-white px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+               href="{% url 'restaurants:restaurant_list' %}">
+                Browse Restaurants
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get CSRF token once
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+    // Track if there are pending updates to avoid multiple simultaneous requests
+    let isPendingUpdate = false;
+
+    // Store cart data locally to avoid unnecessary server requests
+    const cartData = {
+        items: {},
+        needsUpdate: false
+    };
+
+    // Toast notification system
+    let currentToast = null;
+
+    function showToast(message, type = 'success') {
+        // Remove existing toast if present
+        if (currentToast) {
+            document.body.removeChild(currentToast);
+            currentToast = null;
+        }
+
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = `fixed right-4 bottom-4 z-50 px-4 py-3 rounded shadow-lg ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <div class="mr-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                </div>
+                <div>${message}</div>
+                <button class="ml-4 text-gray-500 hover:text-gray-700" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+        currentToast = toast;
+
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        document.body.removeChild(toast);
+                        if (currentToast === toast) {
+                            currentToast = null;
+                        }
+                    }
+                }, 500);
+            }
+        }, 3000);
+    }
+
+    // Helper function to update cart count in navigation
+    function updateCartCount(count) {
+        const cartCountElement = document.querySelector('.fa-shopping-cart + span');
+        if (cartCountElement) {
+            cartCountElement.textContent = count;
+            if (count > 0) {
+                cartCountElement.classList.remove('hidden');
+            } else {
+                cartCountElement.classList.add('hidden');
+            }
+        }
+    }
+
+    // Function to update the order summary
+    function updateOrderSummary() {
+        try {
+            // Calculate cart total from local data
+            let subtotal = 0;
+            Object.keys(cartData.items).forEach(itemId => {
+                const item = cartData.items[itemId];
+                subtotal += (item.price * item.quantity);
+            });
+
+            // Round to whole number
+            subtotal = Math.round(subtotal);
+
+            // Calculate totals with no tax
+            const deliveryFee = Math.round({{ cart.restaurant.delivery_fee|default:30 }});
+            const total = subtotal + deliveryFee;
+
+            // Update the summary elements
+            const subtotalElement = document.querySelector('.subtotal-value');
+            const deliveryFeeElement = document.querySelector('.delivery-fee-value');
+            const totalElement = document.querySelector('.total-value');
+
+            if (subtotalElement) subtotalElement.textContent = 'TK ' + subtotal;
+            if (deliveryFeeElement) deliveryFeeElement.textContent = 'TK ' + deliveryFee;
+            if (totalElement) totalElement.textContent = 'TK ' + total;
+
+            return subtotal; // Return the subtotal for other functions to use
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    // Function to update the UI for an item
+    function updateItemUI(itemId, quantity) {
+        const itemElement = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+        if (!itemElement) return;
+
+        const priceElement = itemElement.querySelector('.item-price');
+        const quantityInput = itemElement.querySelector('.item-qty');
+
+        if (priceElement && cartData.items[itemId]) {
+            const total = Math.round(cartData.items[itemId].price * quantity);
+            priceElement.textContent = 'TK ' + total;
+        }
+
+        if (quantityInput && quantityInput.value !== quantity.toString()) {
+            quantityInput.value = quantity;
+        }
+    }
+
+    // Function to merge duplicate items in the cart
+    function mergeDuplicateItems() {
+        // Create a map of food IDs to cart items
+        const foodIdMap = {};
+        const itemsToRemove = [];
+
+        // Group items by food ID
+        document.querySelectorAll('.cart-item').forEach(item => {
+            const itemId = item.dataset.itemId;
+            const foodId = item.dataset.foodId;
+
+            if (!foodId) return;
+
+            if (!foodIdMap[foodId]) {
+                foodIdMap[foodId] = {
+                    primaryItemId: itemId,
+                    totalQuantity: parseInt(item.querySelector('.item-qty').value) || 1,
+                    duplicates: []
+                };
+            } else {
+                foodIdMap[foodId].totalQuantity += parseInt(item.querySelector('.item-qty').value) || 1;
+                foodIdMap[foodId].duplicates.push(itemId);
+                itemsToRemove.push(itemId);
+            }
+        });
+
+        // If no duplicates found, show a message
+        if (itemsToRemove.length === 0) {
+            showToast('No duplicate items found in your cart', 'success');
+            return;
+        }
+
+        // For each duplicate set, update the primary item's quantity and remove the others
+        for (const foodId in foodIdMap) {
+            if (foodIdMap[foodId].duplicates.length > 0) {
+                const primaryItemId = foodIdMap[foodId].primaryItemId;
+                const primaryItem = document.querySelector(`.cart-item[data-item-id="${primaryItemId}"]`);
+                const quantityInput = primaryItem.querySelector('.item-qty');
+
+                // Update the primary item's quantity
+                quantityInput.value = foodIdMap[foodId].totalQuantity;
+                updateCartItemLocally(primaryItemId, foodIdMap[foodId].totalQuantity);
+
+                // Update in cart data
+                if (cartData.items[primaryItemId]) {
+                    cartData.items[primaryItemId].quantity = foodIdMap[foodId].totalQuantity;
+                    cartData.items[primaryItemId].needsUpdate = true;
+                }
+
+                // Remove duplicate items one by one
+                const removeDuplicate = (index) => {
+                    if (index >= foodIdMap[foodId].duplicates.length) {
+                        // All duplicates removed, save changes
+                        cartData.needsUpdate = true;
+                        saveCartToServer();
+                        return;
+                    }
+
+                    const duplicateId = foodIdMap[foodId].duplicates[index];
+
+                    fetch(`{% url 'orders:remove_from_cart' 0 %}`.replace('0', duplicateId), {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrftoken
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Network response was not ok: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            throw new Error('Invalid server response');
+                        }
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Remove item from DOM if it exists
+                            const duplicateElement = document.querySelector(`.cart-item[data-item-id="${duplicateId}"]`);
+                            if (duplicateElement) {
+                                duplicateElement.remove();
+                            }
+
+                            // Remove from local data
+                            delete cartData.items[duplicateId];
+
+                            // Process next duplicate
+                            removeDuplicate(index + 1);
+                        }
+                    })
+                    .catch(error => {
+                        // Continue with next item anyway
+                        removeDuplicate(index + 1);
+                    });
+                };
+
+                // Start removing duplicates
+                removeDuplicate(0);
+            }
+        }
+
+        showToast('Merging duplicate items...', 'success');
+    }
+
+    // Function to save cart to server
+    function saveCartToServer() {
+        if (isPendingUpdate || !cartData.needsUpdate) return;
+
+        isPendingUpdate = true;
+
+        // Get all items that need to be updated
+        const updates = Object.keys(cartData.items)
+            .filter(itemId => cartData.items[itemId].needsUpdate)
+            .map(itemId => ({
+                itemId,
+                quantity: cartData.items[itemId].quantity
+            }));
+
+        if (updates.length === 0) {
+            isPendingUpdate = false;
+            return;
+        }
+
+        // Create promises for all updates
+        const updatePromises = updates.map(update => {
+            return fetch(`{% url 'orders:update_cart_item' 0 %}`.replace('0', update.itemId), {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `quantity=${update.quantity}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                // Try to parse as JSON safely
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Invalid server response');
+                }
+            });
+        });
+
+        // Execute all updates
+        Promise.all(updatePromises)
+            .then(results => {
+                // Update status of saved items
+                updates.forEach(update => {
+                    if (cartData.items[update.itemId]) {
+                        cartData.items[update.itemId].needsUpdate = false;
+                    }
+                });
+
+                // Check if all items are updated
+                cartData.needsUpdate = Object.keys(cartData.items).some(itemId =>
+                    cartData.items[itemId].needsUpdate);
+
+                // Get the last result for the final cart state
+                if (results.length > 0) {
+                    const lastResult = results[results.length - 1];
+
+                    if (lastResult.status === 'success') {
+                        // Update cart count in header
+                        updateCartCount(lastResult.cart_count);
+
+                        // Show a success message only once after all updates
+                        showToast('Cart updated successfully', 'success');
+                    }
+                }
+            })
+            .catch(error => {
+                showToast('Error updating cart. Please try again.', 'error');
+            })
+            .finally(() => {
+                isPendingUpdate = false;
+
+                // If there are still pending updates, try again
+                if (cartData.needsUpdate) {
+                    setTimeout(saveCartToServer, 1000);
+                }
+            });
+    }
+
+    // Function to update cart item locally (no server request)
+    function updateCartItemLocally(itemId, quantity) {
+        if (!cartData.items[itemId]) return;
+
+        // Update the quantity
+        cartData.items[itemId].quantity = quantity;
+        cartData.items[itemId].needsUpdate = true;
+        cartData.needsUpdate = true;
+
+        // Update the UI immediately
+        updateItemUI(itemId, quantity);
+
+        // Update the order summary
+        updateOrderSummary();
+    }
+
+    // Initialize cart data from DOM
+    const cartItems = document.querySelectorAll('.cart-item');
+    cartItems.forEach(item => {
+        const itemId = item.dataset.itemId;
+        const itemPrice = parseFloat(item.dataset.itemPrice) || 0;
+        const quantityInput = item.querySelector('.item-qty');
+        const quantity = parseInt(quantityInput?.value) || 1;
+
+        cartData.items[itemId] = {
+            price: itemPrice,
+            quantity: quantity,
+            needsUpdate: false,
+            foodId: item.dataset.foodId
+        };
+    });
+
+    // Set up event handlers for each cart item
+    cartItems.forEach(item => {
+        const itemId = item.dataset.itemId;
+        const quantityInput = item.querySelector('.item-qty');
+        const decreaseBtn = item.querySelector('.decrease-qty');
+        const increaseBtn = item.querySelector('.increase-qty');
+        const removeBtn = item.querySelector('.remove-item');
+
+        if (!quantityInput || !decreaseBtn || !increaseBtn || !removeBtn) return;
+
+        // Update when input changes directly
+        quantityInput.addEventListener('change', function() {
+            const newQty = parseInt(this.value) || 1;
+
+            // Ensure quantity is at least 1
+            if (newQty < 1) {
+                this.value = 1;
+                updateCartItemLocally(itemId, 1);
+            } else {
+                updateCartItemLocally(itemId, newQty);
+            }
+        });
+
+        // Decrease quantity button (client-side only)
+        decreaseBtn.addEventListener('click', function() {
+            const currentQty = parseInt(quantityInput.value) || 1;
+            if (currentQty > 1) {
+                const newQty = currentQty - 1;
+                quantityInput.value = newQty;
+                updateCartItemLocally(itemId, newQty);
+            }
+        });
+
+        // Increase quantity button (client-side only)
+        increaseBtn.addEventListener('click', function() {
+            const currentQty = parseInt(quantityInput.value) || 1;
+            const newQty = currentQty + 1;
+            quantityInput.value = newQty;
+            updateCartItemLocally(itemId, newQty);
+        });
+
+        // Remove item button
+        removeBtn.addEventListener('click', function() {
+            if (!confirm('Are you sure you want to remove this item?')) return;
+
+            fetch(`{% url 'orders:remove_from_cart' 0 %}`.replace('0', itemId), {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                // Try to parse as JSON safely
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Invalid server response');
+                }
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Remove item from local data
+                    delete cartData.items[itemId];
+
+                    // Remove item from DOM
+                    item.remove();
+
+                    // Update cart count in header
+                    updateCartCount(data.cart_count);
+
+                    // Update order summary
+                    updateOrderSummary();
+
+                    // Show toast notification
+                    showToast('Item removed from cart', 'success');
+
+                    // If cart is empty, reload page
+                    if (data.cart_count === 0) {
+                        window.location.reload();
+                    }
+                } else {
+                    showToast('Error removing item', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred', 'error');
+            });
+        });
+    });
+
+    // Update cart button - triggers save to server
+    const updateCartBtn = document.getElementById('update-cart');
+    if (updateCartBtn) {
+        updateCartBtn.addEventListener('click', function() {
+            if (Object.keys(cartData.items).length === 0) {
+                showToast('No items to update', 'error');
+                return;
+            }
+
+            // Mark all items as needing update
+            Object.keys(cartData.items).forEach(itemId => {
+                cartData.items[itemId].needsUpdate = true;
+            });
+            cartData.needsUpdate = true;
+
+            // Start the save process
+            saveCartToServer();
+        });
+    }
+
+    // Merge duplicate items button
+    const mergeItemsBtn = document.getElementById('merge-items');
+    if (mergeItemsBtn) {
+        mergeItemsBtn.addEventListener('click', function() {
+            mergeDuplicateItems();
+        });
+    }
+
+    // Clear cart button
+    const clearCartBtn = document.getElementById('clear-cart');
+    if (clearCartBtn) {
+        clearCartBtn.addEventListener('click', function() {
+            if (!confirm('Are you sure you want to clear your cart?')) return;
+
+            fetch(`{% url 'orders:clear_cart' %}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                // Try to parse as JSON safely
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Invalid server response');
+                }
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload page to show empty cart
+                    window.location.reload();
+                } else {
+                    showToast('Error clearing cart', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred', 'error');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
